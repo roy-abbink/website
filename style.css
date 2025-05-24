@@ -1,28 +1,41 @@
-* {
-    margin: 0;
-    padding: 0;
+*, *::before, *::after {
     box-sizing: border-box;
+  }
+
+* {
+margin: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+html {
+    interpolate-size: allow-keywords;
+}
 }
 
 body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    padding: 20px;
-    background-color: #f4f4f4;
+-webkit-font-smoothing: antialiased;
 }
 
-h1 {
-    color: #333;
-    margin-bottom: 20px;
+img, picture, video, canvas, svg {
+display: block;
+max-width: 100%;
+}
+
+input, button, textarea, select {
+font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+overflow-wrap: break-word;
 }
 
 p {
-    margin-bottom: 15px;
-    color: #666;
+text-wrap: pretty;
+}
+h1, h2, h3, h4, h5, h6 {
+text-wrap: balance;
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
+#root, #__next {
+isolation: isolate;
 }
