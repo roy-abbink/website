@@ -1,3 +1,25 @@
+/* ---------- VARIABLES ---------- */
+:root {
+    --color-primary: #4B45F2;
+    --color-neutral-lighter: #FFFFFF;
+    --color-neutral-light: #eeeeee;
+    --color-neutral: #888888;
+    --color-neutral-dark: #444444;
+    --color-neutral-darker: #000000;
+    --color-green: #64A66F;
+
+    --font-size-xsmall: 0.875rem;
+    --font-size-small: 1.125rem;
+    --font-size-medium: 1.25rem;
+    --font-size-large: 1.5rem;
+    --font-size-xlarge: 2.5rem;
+
+    --border-radius-small: 0.5rem;
+    --border-radius-large: 1rem;
+    --border-radius-full: 100rem;
+}
+
+/* ---------- CSS RESET ---------- */
 *, *::before, *::after {
     box-sizing: border-box;
   }
@@ -38,4 +60,278 @@ text-wrap: balance;
 
 #root, #__next {
 isolation: isolate;
+}
+
+/* ---------- TYPOGRAPHY ---------- */
+h1 {
+    font-size: var(--font-size-xlarge);
+    font-weight: 700;
+}
+
+h2 {
+    font-size: var(--font-size-large);
+    font-weight: 700;
+}
+
+h3 {
+    font-size: var(--font-size-medium);
+    font-weight: 700;
+}
+
+p {
+    font-size: var(--font-size-small);
+    font-weight: 400;
+}
+
+small {
+    font-size: var(--font-size-xsmall);
+    font-weight: 400;
+}
+
+/* ---------- GENERAL SECTION STYLES ---------- */
+.section {
+    margin-top: 8rem;
+}
+
+.section__header {
+    text-align: left;
+    margin-bottom: 4rem;
+}
+
+.section__title {
+    font-size: var(--font-size-large);
+    margin-bottom: 1rem;
+}
+
+.section__description {
+    font-size: var(--font-size-medium);
+    margin-bottom: 2rem;
+}
+
+.section__grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.section__item {
+    background-color: var(--color-neutral-light);
+    padding: 1.5rem;
+    border-radius: var(--border-radius-large);
+}
+
+.section__item svg {
+    margin-bottom: 1rem;
+}
+
+.section__grid {
+    grid-template-columns: 1fr;
+}
+
+.section__footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+}
+
+.section__footer small {
+    max-width: 600px;
+    margin-top: 1rem;
+}
+
+/* ---------- CONTAINER ---------- */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* ---------- NAVIGATION ---------- */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 0rem;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo svg {
+    width: 40px;
+    height: 40px;
+}
+
+.logo span {
+    font-size: var(--font-size-medium);
+    font-weight: bold;
+}
+
+
+/* ---------- HERO ---------- */
+.hero {
+    background-color: var(--color-neutral-light);
+    color: var(--color-neutral-darker);
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+    border-radius: var(--border-radius-large);
+}
+
+.hero__title {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* ---------- AVAILABILITY SECTION ---------- */
+.availability__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(1, 1fr);
+    grid-template-rows: 2fr 3fr;
+}
+
+.availability__day {
+    background-color: var(--color-green);
+    color: var(--color-neutral-lighter);
+    padding: 1.5rem;
+    border-radius: var(--border-radius-large);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 150px;
+}
+
+.availability__day--booked {
+    background-color: var(--color-neutral-light);
+    color: var(--color-neutral-dark);
+}
+
+.availability__day h3 {
+    margin-bottom: 0.5rem;
+    font-size: var(--font-size-medium);
+}
+
+.availability__day p {
+    font-size: var(--font-size-small);
+}
+
+/* ---------- LOGOS ---------- */
+
+.logos {
+    padding: 40px 0;
+}
+
+.logos__grid {
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 1.5rem;
+    justify-content: center;
+    align-items: center;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+}
+
+.logos__item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ---------- COMPARISON SECTION ---------- */
+.comparison .section__grid {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---------- FOOTER ---------- */
+.footer {
+    padding: 20px 0;
+    margin-top: 8rem;
+}
+
+.footer__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f5f5f5; /* Lichtgrijze achtergrond */
+    border-radius: 12px; /* Afgeronde hoeken */
+}
+
+.footer__content {
+    text-align: center;
+}
+
+/* ---------- LARGE SCREENS ---------- */
+@media (min-width: 640px) {
+    :root {
+        --font-size-xlarge: 3rem;
+        --font-size-large: 2rem;
+        --font-size-medium: 1.5rem;
+        --font-size-small: 1.25rem;
+        --font-size-xsmall: 1rem;
+    }
+
+    .clients__header {
+        max-width: 800px;
+        text-align: center;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .clients__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .hero {
+        background-position: 50% 10%;
+        min-height: 70vh;
+    }
+
+    .section__header {
+        max-width: 800px;
+        text-align: center;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .clients .section__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .services .section__grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .reasons .section__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .comparison .section__grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .partnership .section__grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .availability__container {
+        grid-template-columns: 2fr 3fr;
+        grid-template-rows: 1fr;
+    }
+
+    .logos__grid {
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: 1fr;
+    }
 }
