@@ -1,19 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta name="robots" content="noindex">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roy Abbink - Freelance Product Designer</title>
-    <meta name="author" content="Roy Abbink">
-    <meta name="language" content="English">
-    <meta name="description" content="I design intuitive products that delight people and grow businesses">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
+  <title>Roy's Home on the Web</title>
+  <style>
+    body {
+      background-color: #FFFFCC;
+      color: #000000;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      width: 760px;
+      margin: 0 auto;
+      background-color: #FFFFFF;
+      border: 3px double #0000FF;
+      padding: 20px;
+    }
+    h1 {
+      color: #FF0000;
+      background-color: #00FFFF;
+      padding: 10px;
+      border: 2px dashed #000000;
+      text-align: center;
+    }
+    hr {
+      border: 1px dotted #0000FF;
+    }
+    a {
+      color: #0000FF;
+      text-decoration: underline;
+    }
+    .blink {
+      animation: blinker 1s linear infinite;
+    }
+    @keyframes blinker {
+      50% { opacity: 0; }
+    }
+    .marquee {
+      background-color: #FFCC00;
+      color: #000000;
+      padding: 5px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-    <h1>Roy Abbink</h1>
-    <p>Welcome to my website</p>
+  <div class="marquee">
+    <marquee>Welcome to Roy's Totally Awesome Website!</marquee>
+  </div>
+  <div class="container">
+    <h1>🚀 Roy's Homepage 🚀</h1>
+    <p>Hi, I'm Roy! I'm a product designer and I love retro internet vibes, design, and pizza 🍕.</p>
+    
+    <hr>
+    <h2>🖥️ About Me</h2>
+    <p>I’ve been a designer since 2008. I specialize in UX/UI for tech companies and also like to work on my own creative projects.</p>
+
+    <hr>
+    <h2>🌐 My Links</h2>
+    <ul>
+      <li><a href="#">My Portfolio</a></li>
+      <li><a href="#">My Blog</a></li>
+      <li><a href="mailto:roy@example.com">Email Me!</a></li>
+    </ul>
+
+    <hr>
+    <p class="blink">✨ Under Construction ✨</p>
+  </div>
 </body>
 </html>

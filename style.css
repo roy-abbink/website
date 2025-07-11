@@ -5,6 +5,7 @@ box-sizing: border-box;
 
 * {
 margin: 0;
+padding: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -15,6 +16,7 @@ html {
 
 body {
 -webkit-font-smoothing: antialiased;
+min-height: 100vh;
 }
 
 img, picture, video, canvas, svg {
@@ -44,4 +46,17 @@ isolation: isolate;
 /* ---------- VARIABLES ---------- */
 :root {
     --my-first-variable: #F00;
+}
+
+.container {
+    width: 100vw;
+    width: 100dvw;
+    height: 100vh;
+    height: 100dvh;
+    background-color: #ccc;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
 }
