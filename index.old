@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roy Abbink - Freelance Product Designer</title>
+    <meta name="author" content="Roy Abbink">
+    <meta name="language" content="English">
+    <meta name="description" content="I design intuitive products that delight people and grow businesses">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Roy Abbink</h1>
+        <p>Welcome to my website</p>
+    </div>
+</body>
+</html>
