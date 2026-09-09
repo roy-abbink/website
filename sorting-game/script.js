@@ -6,28 +6,35 @@
   var BALL_SIZE = 44;
   var LEFT_ZONE_END = GAME_WIDTH * 0.2;
   var RIGHT_ZONE_START = GAME_WIDTH * 0.8;
-  var BALL_LIFETIME_MS = 5000;
-  var BLINK_SLOW_AT_MS = 3000;
-  var BLINK_FAST_AT_MS = 4000;
+  var BALL_LIFETIME_MS = 10000;
+  var BLINK_SLOW_AT_MS = 5000;
+  var BLINK_FAST_AT_MS = 7500;
   var INITIAL_SPAWN_INTERVAL_MS = 2000;
   var SPAWN_SPEEDUP_PERIOD_MS = 10000;
   var SPAWN_SPEEDUP_FACTOR = 0.9;
   var MAX_LIVES = 3;
+  var BALL_SPEED_MIN = 40;
+  var BALL_SPEED_MAX = 80;
 
   var gameEl = document.getElementById('game');
   var livesHud = document.getElementById('lives-hud');
   var scoreHud = document.getElementById('score-hud');
-  var overlayEl = document.getElementById('game-over-overlay');
+  var startOverlayEl = document.getElementById('start-overlay');
+  var gameOverOverlayEl = document.getElementById('game-over-overlay');
   var finalScoreEl = document.getElementById('final-score');
+  var startBtn = document.getElementById('start-btn');
   var restartBtn = document.getElementById('restart-btn');
   var zoneEls = Array.prototype.slice.call(gameEl.querySelectorAll('.zone'));
 
   var state = null;
+  var animationFrameId = null;
+  var lastFrameTs = null;
 
   function createState() {
     return {
       score: 0,
       explosions: 0,
+      running: false,
       gameOver: false,
       startTime: 0,
       spawnTimeoutId: null,
@@ -42,8 +49,8 @@
   }
 
   function updateHud() {
-    var displayedLives = Math.min(state.explosions, MAX_LIVES);
-    livesHud.textContent = displayedLives + '/' + MAX_LIVES;
+    var livesLeft = Math.max(0, MAX_LIVES - state.explosions);
+    livesHud.textContent = 'Levens: ' + livesLeft;
     scoreHud.textContent = String(state.score);
   }
 
@@ -57,6 +64,15 @@
     return Math.max(min, Math.min(max, value));
   }
 
+  function randomVelocity() {
+    var angle = Math.random() * Math.PI * 2;
+    var speed = BALL_SPEED_MIN + Math.random() * (BALL_SPEED_MAX - BALL_SPEED_MIN);
+    return {
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed
+    };
+  }
+
   function spawnBall() {
     if (state.gameOver) return;
 
@@ -65,6 +81,7 @@
     var maxX = RIGHT_ZONE_START - BALL_SIZE;
     var x = minX + Math.random() * (maxX - minX);
     var y = Math.random() * (GAME_HEIGHT - BALL_SIZE);
+    var velocity = randomVelocity();
 
     var id = state.nextBallId++;
     var el = document.createElement('div');
@@ -84,6 +101,9 @@
       el: el,
       x: x,
       y: y,
+      vx: velocity.vx,
+      vy: velocity.vy,
+      dragging: false,
       spawnTime: performance.now(),
       status: 'alive',
       timeouts: []
@@ -199,6 +219,7 @@
       var pointerY = evt.clientY - rect.top;
       dragOffsetX = pointerX - ball.x;
       dragOffsetY = pointerY - ball.y;
+      ball.dragging = true;
       el.classList.add('dragging');
       el.setPointerCapture(evt.pointerId);
       el.addEventListener('pointermove', onPointerMove);
@@ -223,6 +244,7 @@
     }
 
     function onPointerUp(evt) {
+      ball.dragging = false;
       el.classList.remove('dragging');
       el.removeEventListener('pointermove', onPointerMove);
       el.removeEventListener('pointerup', onPointerUp);
@@ -242,10 +264,59 @@
         if (ball.color === 'red') resolveBallSuccess(ball);
         else explodeBall(ball);
       }
-      // zone === 'middle': ball stays alive, nothing happens
+      // zone === 'middle': ball stays alive and keeps bouncing
     }
 
     el.addEventListener('pointerdown', onPointerDown);
+  }
+
+  function moveBall(ball, dt) {
+    var minX = LEFT_ZONE_END;
+    var maxX = RIGHT_ZONE_START - BALL_SIZE;
+    var minY = 0;
+    var maxY = GAME_HEIGHT - BALL_SIZE;
+
+    var newX = ball.x + ball.vx * dt;
+    var newY = ball.y + ball.vy * dt;
+
+    if (newX < minX) {
+      newX = minX;
+      ball.vx = Math.abs(ball.vx);
+    } else if (newX > maxX) {
+      newX = maxX;
+      ball.vx = -Math.abs(ball.vx);
+    }
+
+    if (newY < minY) {
+      newY = minY;
+      ball.vy = Math.abs(ball.vy);
+    } else if (newY > maxY) {
+      newY = maxY;
+      ball.vy = -Math.abs(ball.vy);
+    }
+
+    ball.x = newX;
+    ball.y = newY;
+    ball.el.style.left = newX + 'px';
+    ball.el.style.top = newY + 'px';
+  }
+
+  function animate(ts) {
+    if (!state || !state.running || state.gameOver) {
+      animationFrameId = null;
+      return;
+    }
+    if (lastFrameTs === null) lastFrameTs = ts;
+    var dt = (ts - lastFrameTs) / 1000;
+    lastFrameTs = ts;
+
+    Object.keys(state.balls).forEach(function (id) {
+      var ball = state.balls[id];
+      if (ball.status !== 'alive' || ball.dragging) return;
+      moveBall(ball, dt);
+    });
+
+    animationFrameId = requestAnimationFrame(animate);
   }
 
   function scheduleNextSpawn() {
@@ -261,6 +332,7 @@
   function endGame() {
     if (state.gameOver) return;
     state.gameOver = true;
+    state.running = false;
     if (state.spawnTimeoutId) clearTimeout(state.spawnTimeoutId);
 
     Object.keys(state.balls).forEach(function (id) {
@@ -271,23 +343,34 @@
     state.balls = {};
 
     finalScoreEl.textContent = String(state.score);
-    overlayEl.classList.remove('hidden');
+    gameOverOverlayEl.classList.remove('hidden');
+  }
+
+  function resetBoard() {
+    var stray = gameEl.querySelectorAll('.ball, .explosion-fx, .score-popup');
+    Array.prototype.forEach.call(stray, function (n) { n.remove(); });
   }
 
   function startGame() {
     state = createState();
     state.startTime = performance.now();
+    state.running = true;
     updateHud();
-    overlayEl.classList.add('hidden');
+    startOverlayEl.classList.add('hidden');
+    gameOverOverlayEl.classList.add('hidden');
+    resetBoard();
 
-    var stray = gameEl.querySelectorAll('.ball, .explosion-fx, .score-popup');
-    stray.forEach ? stray.forEach(function (n) { n.remove(); }) :
-      Array.prototype.forEach.call(stray, function (n) { n.remove(); });
+    lastFrameTs = null;
+    if (animationFrameId === null) {
+      animationFrameId = requestAnimationFrame(animate);
+    }
 
     scheduleNextSpawn();
   }
 
+  startBtn.addEventListener('click', startGame);
   restartBtn.addEventListener('click', startGame);
 
-  startGame();
+  state = createState();
+  updateHud();
 })();

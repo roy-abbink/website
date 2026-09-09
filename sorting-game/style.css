@@ -79,28 +79,33 @@ body {
 
 .hud {
   position: absolute;
-  top: 10px;
-  min-width: 44px;
-  padding: 6px 12px;
-  border-radius: 999px;
+  top: 12px;
   font-weight: bold;
-  font-size: 16px;
-  text-align: center;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+  font-size: 20px;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.55),
+    0 0 6px rgba(0, 0, 0, 0.45),
+    0 2px 4px rgba(0, 0, 0, 0.4);
   z-index: 50;
   pointer-events: none;
 }
 
 .hud-lives {
-  left: 10px;
+  left: 14px;
   background: linear-gradient(135deg, #ff9d3c, #d6210f);
-  color: #fff;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #d6210f;
 }
 
 .hud-score {
-  right: 10px;
+  right: 14px;
   background: linear-gradient(135deg, #ffe873, #ff9d1e);
-  color: #4a2c00;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #ff9d1e;
 }
 
 /* ---------- Balls ---------- */
