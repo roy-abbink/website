@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sorting Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+    <h1 class="page-title">Sorting Game</h1>
+    <p class="page-subtitle">Sleep blauwe ballen naar links, rode ballen naar rechts. Wacht niet te lang!</p>
+
+    <div id="game" class="game">
+      <div class="zone zone-left" data-zone="left"></div>
+      <div class="zone zone-middle" data-zone="middle"></div>
+      <div class="zone zone-right" data-zone="right"></div>
+
+      <div id="lives-hud" class="hud hud-lives">0/3</div>
+      <div id="score-hud" class="hud hud-score">0</div>
+
+      <div id="game-over-overlay" class="overlay hidden">
+        <div class="overlay-content">
+          <h2>Game Over</h2>
+          <p class="overlay-score">Score: <span id="final-score">0</span></p>
+          <button id="restart-btn" type="button">Speel nog een keer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
