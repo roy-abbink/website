@@ -1,62 +1,212 @@
-/* ---------- CSS RESET ---------- */
+/* ---------- RESET ---------- */
 *, *::before, *::after {
-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 * {
-margin: 0;
-padding: 0;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-html {
-    interpolate-size: allow-keywords;
-}
-}
-
-body {
--webkit-font-smoothing: antialiased;
-min-height: 100vh;
-}
-
-img, picture, video, canvas, svg {
-display: block;
-max-width: 100%;
-}
-
-input, button, textarea, select {
-font: inherit;
-}
-
-p, h1, h2, h3, h4, h5, h6 {
-overflow-wrap: break-word;
-}
-
-p {
-text-wrap: pretty;
-}
-h1, h2, h3, h4, h5, h6 {
-text-wrap: balance;
-}
-
-#root, #__next {
-isolation: isolate;
+  margin: 0;
+  padding: 0;
 }
 
 /* ---------- VARIABLES ---------- */
 :root {
-    --my-first-variable: #F00;
+  --bg: #07080b;
+  --bg-elev: #101319;
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #dce6ec;
+  --text-dim: #6b7684;
+
+  --cyan: #3ce7ff;
+  --yellow: #ffd400;
+  --red: #ff4d5e;
+  --green: #33e08a;
+  --blue: #2b3bff;
 }
 
-.container {
-    width: 100vw;
-    width: 100dvw;
-    height: 100vh;
-    height: 100dvh;
-    background-color: #ccc;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+/* ---------- BASE ---------- */
+html {
+  font-size: 16px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+ul {
+  list-style: none;
+}
+
+/* ---------- PAGE ---------- */
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1rem 1rem 2.5rem;
+}
+
+/* ---------- HEADER ---------- */
+.head {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.25rem 0 1.25rem;
+}
+
+.head__logo {
+  flex: 0 0 auto;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  background: var(--blue);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.125rem;
+  border-radius: 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+.head__title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.head__brand {
+  font-weight: 700;
+  font-size: clamp(1.125rem, 4vw, 1.375rem);
+  letter-spacing: 0.04em;
+}
+
+.head__sub {
+  font-size: 0.8125rem;
+  color: var(--text-dim);
+}
+
+/* ---------- FILTERS ---------- */
+.filters {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid var(--line);
+  scrollbar-width: none;
+}
+
+.filters::-webkit-scrollbar {
+  display: none;
+}
+
+.filters__item {
+  flex: 0 0 auto;
+}
+
+.filters__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  height: 2rem;
+  padding: 0 0.875rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.filters__input:focus-visible + .pill {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.pill--red { border-color: color-mix(in srgb, var(--red) 40%, var(--line)); }
+.pill--green { border-color: color-mix(in srgb, var(--green) 40%, var(--line)); }
+.pill--yellow { border-color: color-mix(in srgb, var(--yellow) 40%, var(--line)); }
+.pill--cyan { border-color: color-mix(in srgb, var(--cyan) 40%, var(--line)); }
+
+.page:has(#f-alle:checked) label[for="f-alle"],
+.page:has(#f-nieuws:checked) label[for="f-nieuws"],
+.page:has(#f-releases:checked) label[for="f-releases"],
+.page:has(#f-reviews:checked) label[for="f-reviews"],
+.page:has(#f-esports:checked) label[for="f-esports"] {
+  color: var(--bg);
+  background: var(--text);
+  border-color: var(--text);
+}
+
+.page:has(#f-nieuws:checked) label[for="f-nieuws"] { background: var(--red); border-color: var(--red); }
+.page:has(#f-releases:checked) label[for="f-releases"] { background: var(--green); border-color: var(--green); }
+.page:has(#f-reviews:checked) label[for="f-reviews"] { background: var(--yellow); color: #1a1500; border-color: var(--yellow); }
+.page:has(#f-esports:checked) label[for="f-esports"] { background: var(--cyan); color: #001a1f; border-color: var(--cyan); }
+
+/* ---------- HEADLINES ---------- */
+.headline {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.dot {
+  flex: 0 0 auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  transform: translateY(-0.15rem);
+}
+
+.dot--red { background: var(--red); }
+.dot--green { background: var(--green); }
+.dot--yellow { background: var(--yellow); }
+.dot--cyan { background: var(--cyan); }
+
+.headline__text {
+  font-size: clamp(0.9375rem, 3.6vw, 1.0625rem);
+}
+
+.text--cyan { color: var(--cyan); }
+.text--yellow { color: var(--yellow); }
+
+.page:has(#f-nieuws:checked) .headline:not(.cat-nieuws),
+.page:has(#f-releases:checked) .headline:not(.cat-releases),
+.page:has(#f-reviews:checked) .headline:not(.cat-reviews),
+.page:has(#f-esports:checked) .headline:not(.cat-esports) {
+  display: none;
+}
+
+/* ---------- FOOTER ---------- */
+.foot {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-top: 1.5rem;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- LARGER SCREENS ---------- */
+@media (min-width: 640px) {
+  .page {
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .head {
+    padding-bottom: 1.5rem;
+  }
 }

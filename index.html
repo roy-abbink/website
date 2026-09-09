@@ -1,72 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
-  <title>Roy's Home on the Web</title>
-  <style>
-    body {
-      background-color: #FFFFCC;
-      color: #000000;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      width: 760px;
-      margin: 0 auto;
-      background-color: #FFFFFF;
-      border: 3px double #0000FF;
-      padding: 20px;
-    }
-    h1 {
-      color: #FF0000;
-      background-color: #00FFFF;
-      padding: 10px;
-      border: 2px dashed #000000;
-      text-align: center;
-    }
-    hr {
-      border: 1px dotted #0000FF;
-    }
-    a {
-      color: #0000FF;
-      text-decoration: underline;
-    }
-    .blink {
-      animation: blinker 1s linear infinite;
-    }
-    @keyframes blinker {
-      50% { opacity: 0; }
-    }
-    .marquee {
-      background-color: #FFCC00;
-      color: #000000;
-      padding: 5px;
-      font-weight: bold;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GAMETEKST — videogame nieuws</title>
+  <meta name="description" content="Videogame nieuws in teletekststijl.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="marquee">
-    <marquee>Welcome to Roy's Totally Awesome Website!</marquee>
-  </div>
-  <div class="container">
-    <h1>Roy's Homepage</h1>
-    <p>Hi, I'm Roy! I'm a product designer and I love retro internet vibes, design, and pizza.</p>
-    
-    <hr>
-    <h2>About Me</h2>
-    <p>I’ve been a designer since 2008. I specialize in UX/UI for tech companies and also like to work on my own creative projects.</p>
+  <div class="page">
 
-    <hr>
-    <h2>My Links</h2>
-    <ul>
-      <li><a href="#">My Portfolio</a></li>
-      <li><a href="#">My Blog</a></li>
-      <li><a href="mailto:roy@example.com">Email Me!</a></li>
-    </ul>
+    <header class="head">
+      <div class="head__logo">GT</div>
+      <div class="head__title">
+        <span class="head__brand">GAMETEKST</span>
+        <span class="head__sub">Videogame nieuws</span>
+      </div>
+    </header>
 
-    <hr>
-    <p class="blink">Under Construction</p>
+    <nav class="filters" aria-label="Filter op categorie">
+      <div class="filters__item">
+        <input type="radio" name="filter" id="f-alle" class="filters__input" checked>
+        <label for="f-alle" class="pill">Alles</label>
+      </div>
+      <div class="filters__item">
+        <input type="radio" name="filter" id="f-nieuws" class="filters__input">
+        <label for="f-nieuws" class="pill pill--red">Nieuws</label>
+      </div>
+      <div class="filters__item">
+        <input type="radio" name="filter" id="f-releases" class="filters__input">
+        <label for="f-releases" class="pill pill--green">Releases</label>
+      </div>
+      <div class="filters__item">
+        <input type="radio" name="filter" id="f-reviews" class="filters__input">
+        <label for="f-reviews" class="pill pill--yellow">Reviews</label>
+      </div>
+      <div class="filters__item">
+        <input type="radio" name="filter" id="f-esports" class="filters__input">
+        <label for="f-esports" class="pill pill--cyan">Esports</label>
+      </div>
+    </nav>
+
+    <main class="headlines">
+      <ul>
+        <li class="headline cat-nieuws">
+          <span class="dot dot--red" aria-hidden="true"></span>
+          <span class="headline__text text--cyan">Xbox kondigt nieuwe abonnementsvorm aan</span>
+        </li>
+        <li class="headline cat-releases">
+          <span class="dot dot--green" aria-hidden="true"></span>
+          <span class="headline__text text--cyan">Langverwachte RPG krijgt eindelijk een releasedatum</span>
+        </li>
+        <li class="headline cat-reviews">
+          <span class="dot dot--yellow" aria-hidden="true"></span>
+          <span class="headline__text text--yellow">Nieuwste deel populaire serie krijgt lovende kritieken</span>
+        </li>
+        <li class="headline cat-nieuws">
+          <span class="dot dot--red" aria-hidden="true"></span>
+          <span class="headline__text text--cyan">Grote overname schudt game-industrie op</span>
+        </li>
+        <li class="headline cat-esports">
+          <span class="dot dot--cyan" aria-hidden="true"></span>
+          <span class="headline__text text--cyan">Nederlands team plaatst zich voor wereldkampioenschap</span>
+        </li>
+        <li class="headline cat-releases">
+          <span class="dot dot--green" aria-hidden="true"></span>
+          <span class="headline__text text--cyan">Verrassingsrelease verschijnt zonder aankondiging</span>
+        </li>
+        <li class="headline cat-nieuws">
+          <span class="dot dot--red" aria-hidden="true"></span>
+          <span class="headline__text text--yellow">Ontwikkelaar bevestigt vertraging groot open-wereldspel</span>
+        </li>
+        <li class="headline cat-reviews">
+          <span class="dot dot--yellow" aria-hidden="true"></span>
+          <span class="headline__text text--cyan">Vervolg valt tegen ondanks hoge verwachtingen</span>
+        </li>
+        <li class="headline cat-esports">
+          <span class="dot dot--cyan" aria-hidden="true"></span>
+          <span class="headline__text text--cyan">Recordprijzenpot voor internationaal toernooi</span>
+        </li>
+        <li class="headline cat-releases">
+          <span class="dot dot--green" aria-hidden="true"></span>
+          <span class="headline__text text--cyan">Remaster van klassieker aangekondigd</span>
+        </li>
+        <li class="headline cat-nieuws">
+          <span class="dot dot--red" aria-hidden="true"></span>
+          <span class="headline__text text--cyan">Nieuwe regels raken verdienmodel microtransacties</span>
+        </li>
+        <li class="headline cat-esports">
+          <span class="dot dot--cyan" aria-hidden="true"></span>
+          <span class="headline__text text--yellow">Bekende profspeler stapt over naar nieuw team</span>
+        </li>
+        <li class="headline cat-reviews">
+          <span class="dot dot--yellow" aria-hidden="true"></span>
+          <span class="headline__text text--cyan">Kleine studio verrast met sterke debuuttitel</span>
+        </li>
+        <li class="headline cat-releases">
+          <span class="dot dot--green" aria-hidden="true"></span>
+          <span class="headline__text text--cyan">Populaire indie-hit komt naar consoles</span>
+        </li>
+      </ul>
+    </main>
+
+    <footer class="foot">
+      <span>GAMETEKST</span>
+      <span class="foot__sep" aria-hidden="true">·</span>
+      <span>videogame nieuws</span>
+    </footer>
+
   </div>
 </body>
 </html>
