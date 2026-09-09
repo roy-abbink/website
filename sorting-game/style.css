@@ -1,0 +1,267 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: #1b1d24;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #f2f2f2;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: 1px;
+}
+
+.page-subtitle {
+  margin: 0 0 8px;
+  color: #b7b9c4;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ---------- Game board ---------- */
+
+.game {
+  position: relative;
+  width: 874px;
+  height: 402px;
+  max-width: 100%;
+  display: flex;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  user-select: none;
+  touch-action: none;
+}
+
+.zone {
+  height: 100%;
+  transition: filter 0.15s ease;
+}
+
+.zone-left {
+  flex: 0 0 20%;
+  background: #2f5dd6;
+}
+
+.zone-middle {
+  flex: 0 0 60%;
+  background: #e6d3b3;
+}
+
+.zone-right {
+  flex: 0 0 20%;
+  background: #d6362f;
+}
+
+.zone.zone-highlight {
+  filter: brightness(1.25);
+}
+
+/* ---------- HUD ---------- */
+
+.hud {
+  position: absolute;
+  top: 10px;
+  min-width: 44px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+  z-index: 50;
+  pointer-events: none;
+}
+
+.hud-lives {
+  left: 10px;
+  background: linear-gradient(135deg, #ff9d3c, #d6210f);
+  color: #fff;
+}
+
+.hud-score {
+  right: 10px;
+  background: linear-gradient(135deg, #ffe873, #ff9d1e);
+  color: #4a2c00;
+}
+
+/* ---------- Balls ---------- */
+
+.ball {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  cursor: grab;
+  touch-action: none;
+}
+
+.ball.dragging {
+  z-index: 1000;
+  cursor: grabbing;
+}
+
+.ball-visual {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.ball.ball-blue .ball-visual {
+  background: radial-gradient(circle at 35% 30%, #7fb4ff, #1a4fd6);
+}
+
+.ball.ball-red .ball-visual {
+  background: radial-gradient(circle at 35% 30%, #ff9a8f, #c81f13);
+}
+
+.ball.blink-slow .ball-visual {
+  animation: blink 0.9s steps(1, start) infinite;
+}
+
+.ball.blink-fast .ball-visual {
+  animation: blink 0.22s steps(1, start) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.ball.exploding {
+  pointer-events: none;
+  animation: explode 0.35s ease-out forwards;
+}
+
+@keyframes explode {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.9);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+.explosion-fx {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff3b0 0%, #ff9d1e 40%, rgba(255, 61, 0, 0) 75%);
+  transform: translate(-50%, -50%) scale(0.3);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 900;
+  animation: explosion-burst 0.4s ease-out forwards;
+}
+
+@keyframes explosion-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.6);
+    opacity: 0;
+  }
+}
+
+.score-popup {
+  position: absolute;
+  transform: translate(-50%, 0);
+  color: #ffe873;
+  font-weight: bold;
+  font-size: 16px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 900;
+  animation: score-float 0.8s ease-out forwards;
+}
+
+@keyframes score-float {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -36px);
+  }
+}
+
+/* ---------- Game over overlay ---------- */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.overlay-content {
+  text-align: center;
+  color: #fff;
+}
+
+.overlay-content h2 {
+  margin: 0 0 8px;
+  font-size: 40px;
+}
+
+.overlay-score {
+  margin: 0 0 20px;
+  font-size: 20px;
+}
+
+#restart-btn {
+  padding: 10px 22px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffe873, #ff9d1e);
+  color: #4a2c00;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+#restart-btn:hover {
+  filter: brightness(1.05);
+}
