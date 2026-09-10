@@ -23,9 +23,14 @@ telefoon in hetzelfde netwerk.
 
 ## Besturing
 
-- **Tik** een vis aan om hem op te pakken.
-- **Sleep** naar een bak en laat los, of **flick** (snel wegslingeren) richting
-  een bak.
+- De kat laat vissen los in de arena; ze spartelen daar zelfstandig rond maar
+  komen **nooit** vanzelf in een bak terecht.
+- **Tik en houd vast** om een vis op te pakken, **sleep of flick** hem naar
+  links (ZOET) of rechts (ZOUT). Alleen een actieve sleep- of flickbeweging
+  telt als geldige drop.
 - Zoetwatervissen (Guppy, Meerval) horen in de **ZOET**-bak, de Clownvis hoort
   in de **ZOUT**-bak.
-- Verkeerde bak of een vis die te lang droog ligt kost een leven.
+- Op tijd in de juiste bak levert punten op naar rato van het resterende leven
+  van de vis. Verkeerde bak, of een vis die te lang droog ligt, kost een leven.
+- Er kunnen meerdere vissen tegelijk actief zijn; de kat laat ze steeds sneller
+  los naarmate de ronde vordert (tot een minimum interval).

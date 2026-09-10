@@ -48,26 +48,63 @@
   }
 
   // ============================================================
-  // Layout zones (logical 450x800 space)
+  // Layout — arena pushed low for one/two-thumb reach, docks as
+  // side targets rather than a bottom strip.
   // ============================================================
-  const ZONES = {
-    topBar: { y0: 0, y1: H * 0.10 },
-    catZone: { y0: H * 0.10, y1: H * 0.25 },
-    floor: { y0: H * 0.25, y1: H * 0.75 },
-    tanks: { y0: H * 0.75, y1: H },
-  };
+  const TOPBAR_H = 64;
+  const CATZONE_TOP = TOPBAR_H;
+  const CATZONE_H = 170;
+  const ARENA_TOP = CATZONE_TOP + CATZONE_H; // 234
+  const ARENA_BOTTOM = H;                    // 800
+  const ARENA_LEFT = 14;
+  const ARENA_RIGHT = W - 14;                // 436
 
   const catX = W / 2;
-  const catY = ZONES.catZone.y0 + 46;
+  const catY = CATZONE_TOP + CATZONE_H / 2 - 10;
   const CRATE_W = 54, CRATE_H = 40;
 
-  const freshwaterRect = { x: 10, y: H * 0.75 + 8, w: W / 2 - 18, h: H * 0.25 - 16 };
-  const saltwaterRect = { x: W / 2 + 8, y: H * 0.75 + 8, w: W / 2 - 18, h: H * 0.25 - 16 };
+  const DOCK_W = 128;
+  const DOCK_TOP = 420;
+  const DOCK_BOTTOM = 780;
+  const freshwaterRect = { x: ARENA_LEFT, y: DOCK_TOP, w: DOCK_W, h: DOCK_BOTTOM - DOCK_TOP };
+  const saltwaterRect = { x: ARENA_RIGHT - DOCK_W, y: DOCK_TOP, w: DOCK_W, h: DOCK_BOTTOM - DOCK_TOP };
   const restartButtonRect = { x: W / 2 - 95, y: H * 0.62, w: 190, h: 54 };
 
-  function isOverTankX(x) {
-    return (x >= freshwaterRect.x && x <= freshwaterRect.x + freshwaterRect.w) ||
-      (x >= saltwaterRect.x && x <= saltwaterRect.x + saltwaterRect.w);
+  // Keeps a circle (fish) from ever resting inside a dock rect unless the
+  // caller explicitly skips this — used only for autonomous ("loose") fish
+  // so a fish can never self-deliver into a tank by drifting or flopping.
+  function keepOutsideRect(fish, rect, r) {
+    const left = rect.x, right = rect.x + rect.w, top = rect.y, bottom = rect.y + rect.h;
+    if (fish.x > left && fish.x < right && fish.y > top && fish.y < bottom) {
+      const dl = fish.x - left, dr = right - fish.x, dt = fish.y - top, db = bottom - fish.y;
+      const m = Math.min(dl, dr, dt, db);
+      if (m === dl) { fish.x = left - r; fish.vx = -Math.abs(fish.vx) * BOUNCE; }
+      else if (m === dr) { fish.x = right + r; fish.vx = Math.abs(fish.vx) * BOUNCE; }
+      else if (m === dt) { fish.y = top - r; fish.vy = -Math.abs(fish.vy) * BOUNCE; }
+      else { fish.y = bottom + r; fish.vy = Math.abs(fish.vy) * BOUNCE; }
+      return;
+    }
+    const cx = clamp(fish.x, left, right);
+    const cy = clamp(fish.y, top, bottom);
+    const dx = fish.x - cx, dy = fish.y - cy;
+    const dist = Math.hypot(dx, dy);
+    if (dist < r && dist > 0.0001) {
+      const nx = dx / dist, ny = dy / dist;
+      fish.x = cx + nx * r;
+      fish.y = cy + ny * r;
+      const vn = fish.vx * nx + fish.vy * ny;
+      if (vn < 0) {
+        fish.vx -= 2 * vn * nx;
+        fish.vy -= 2 * vn * ny;
+        fish.vx *= BOUNCE; fish.vy *= BOUNCE;
+      }
+    }
+  }
+
+  function sanitizeAgainstDocks(fish) {
+    const r = fish.def.size * 0.6;
+    keepOutsideRect(fish, freshwaterRect, r);
+    keepOutsideRect(fish, saltwaterRect, r);
   }
 
   // ============================================================
@@ -116,12 +153,38 @@
   const FRICTION = 0.98;
   const BOUNCE = 0.5;
   const FLICK_MIN = 90;
+  const SETTLE_SPEED = 25;
   const HOLD_DURATION = 1.0;
   const THROW_DURATION = 0.22;
   const SQUASH_TIME = 0.16;
   const SCORE_FADE_TIME = 0.45;
   const FAIL_FADE_TIME = 0.3;
   const DEATH_TIME = 0.6;
+  const MAX_SCORE_PER_FISH = 100;
+
+  // Controlled spawn-interval curve (seconds between drops). Anchors are
+  // interpolated up to 180s, then it eases asymptotically toward a floor —
+  // deliberately NOT a compounding "X% faster" curve, so it never runs away.
+  const SPAWN_ANCHORS = [
+    { t: 0, v: 3.0 },
+    { t: 30, v: 3.0 },
+    { t: 60, v: 2.5 },
+    { t: 90, v: 2.1 },
+    { t: 120, v: 1.8 },
+    { t: 180, v: 1.5 },
+  ];
+  const SPAWN_FLOOR = 1.2;
+  function getDropInterval(t) {
+    if (t <= 180) {
+      for (let i = 0; i < SPAWN_ANCHORS.length - 1; i++) {
+        const a = SPAWN_ANCHORS[i], b = SPAWN_ANCHORS[i + 1];
+        if (t >= a.t && t <= b.t) return lerp(a.v, b.v, (t - a.t) / (b.t - a.t));
+      }
+      return SPAWN_ANCHORS[SPAWN_ANCHORS.length - 1].v;
+    }
+    const last = SPAWN_ANCHORS[SPAWN_ANCHORS.length - 1].v;
+    return SPAWN_FLOOR + (last - SPAWN_FLOOR) * Math.exp(-(t - 180) / 100);
+  }
 
   // ============================================================
   // Audio (procedural, WebAudio)
@@ -193,7 +256,7 @@
   let particles = [];
   let draggingFish = null;
   let pointerHistory = [];
-  let dropsCount = 0;
+  let runTime = 0;
   let animTime = 0;
   let tankBubbleTimer = 0.3;
   let fishIdSeq = 0;
@@ -204,11 +267,9 @@
     blinking: false, blinkT: 0, blinkTimer: rand(2, 4),
   };
 
-  function getDropInterval() { return Math.max(0.9, 3.5 - dropsCount * 0.12); }
-
   function initRun() {
     score = 0; lives = 3; fishes = []; particles = [];
-    dropsCount = 0; draggingFish = null; pointerHistory = [];
+    runTime = 0; draggingFish = null; pointerHistory = [];
     cat.phase = 'idle'; cat.timer = 0.6; cat.heldFish = null;
     cat.mood = 'normal'; cat.moodTimer = 0;
   }
@@ -248,7 +309,7 @@
       x, y, vx: 0, vy: 0,
       facing: 1,
       state: 'falling',
-      targetY: rand(ZONES.floor.y0 + 70, ZONES.floor.y1 - 55),
+      targetY: rand(ARENA_TOP + 60, DOCK_TOP + 40),
       life: 1, age: 0, lifeStarted: false,
       wobblePhase: rand(0, Math.PI * 2),
       behaviorTimer: rand(0.4, 1.1),
@@ -260,7 +321,7 @@
   }
 
   function spawnFishFromCat(type) {
-    const x = clamp(catX + rand(-70, 70), 50, W - 50);
+    const x = clamp(catX + rand(-70, 70), ARENA_LEFT + 40, ARENA_RIGHT - 40);
     const y = catY + 26;
     const f = createFish(type, x, y);
     f.vx = rand(-25, 25);
@@ -278,7 +339,7 @@
   function findFishAt(x, y) {
     for (let i = fishes.length - 1; i >= 0; i--) {
       const f = fishes[i];
-      if (f.state !== 'loose' && f.state !== 'falling') continue;
+      if (f.state !== 'loose' && f.state !== 'falling' && f.state !== 'thrown') continue;
       const r = f.def.size * 0.95 + 14;
       if (Math.hypot(f.x - x, f.y - y) <= r) return f;
     }
@@ -327,23 +388,27 @@
   function onPointerMove(x, y) {
     if (!draggingFish) return;
     draggingFish.x = clamp(x + draggingFish.dragOffsetX, 16, W - 16);
-    draggingFish.y = clamp(y + draggingFish.dragOffsetY, ZONES.floor.y0 - 20, H - 8);
+    draggingFish.y = clamp(y + draggingFish.dragOffsetY, ARENA_TOP - 20, H - 8);
     pointerHistory.push({ x, y, t: performance.now() });
     if (pointerHistory.length > 6) pointerHistory.shift();
   }
 
+  // Only a drag-release or an active flick may ever result in a tank
+  // collision counting as a valid drop — see checkTankHit() call sites.
   function onPointerUp() {
     if (!draggingFish) return;
     const fish = draggingFish;
     let { vx, vy } = computeReleaseVelocity();
     const speed = Math.hypot(vx, vy);
-    if (speed < FLICK_MIN) { vx = 0; vy = 0; }
-    else {
+    if (speed < FLICK_MIN) {
+      fish.vx = 0; fish.vy = 0;
+      fish.state = 'loose';
+      sanitizeAgainstDocks(fish);
+    } else {
       const weight = fish.def.weight || 1;
-      vx /= weight; vy /= weight;
+      fish.vx = vx / weight; fish.vy = vy / weight;
+      fish.state = 'thrown';
     }
-    fish.vx = vx; fish.vy = vy;
-    fish.state = 'loose';
     draggingFish = null;
     pointerHistory = [];
   }
@@ -429,8 +494,7 @@
     } else if (cat.phase === 'throw') {
       if (cat.timer <= 0) {
         cat.phase = 'idle';
-        dropsCount++;
-        cat.timer = getDropInterval();
+        cat.timer = getDropInterval(runTime);
       }
     }
   }
@@ -451,6 +515,11 @@
     checkGameOver();
   }
 
+  // Tank collision is only ever consulted for 'dragging' and 'thrown' fish —
+  // states that only exist as a direct result of the player grabbing and
+  // releasing a fish. Autonomous ('loose') fish are physically fenced out
+  // of these rects instead (see keepOutsideRect), so this function is never
+  // even called on their behalf.
   function checkTankHit(fish) {
     if (pointInRect(fish.x, fish.y, freshwaterRect)) resolveTank(fish, 'zoet');
     else if (pointInRect(fish.x, fish.y, saltwaterRect)) resolveTank(fish, 'zout');
@@ -459,10 +528,12 @@
   function resolveTank(fish, tank) {
     if (fish === draggingFish) draggingFish = null;
     if (fish.def.tank === tank) {
-      score += 100;
+      const pts = Math.max(10, Math.round(fish.life * MAX_SCORE_PER_FISH));
+      score += pts;
       fish.state = 'scoring';
       fish.scoreT = SCORE_FADE_TIME;
       spawnSplash(fish.x, fish.y, tank);
+      spawnScoreText(fish.x, fish.y, pts);
       SFX.splash();
     } else {
       lives--;
@@ -483,24 +554,50 @@
     let factor = 1;
     if (fish.life < 0.25) factor = 0.35;
     else if (fish.life < 0.6) factor = 0.65;
+    const bigFlop = Math.random() < 0.15 ? 1.8 : 1;
     switch (fish.def.behavior) {
       case 'gentle':
-        fish.vx += rand(-40, 40) * factor;
-        fish.vy -= rand(30, 70) * factor;
+        fish.vx += rand(-40, 40) * factor * bigFlop;
+        fish.vy -= rand(30, 70) * factor * bigFlop;
         fish.behaviorTimer = rand(1.4, 2.6) / factor;
         squash(fish);
         break;
       case 'burst':
-        fish.vx += rand(-160, 160) * factor;
-        fish.vy -= rand(50, 110) * factor;
+        fish.vx += rand(-160, 160) * factor * bigFlop;
+        fish.vy -= rand(50, 110) * factor * bigFlop;
         fish.behaviorTimer = rand(0.35, 0.9) / factor;
         squash(fish);
         break;
       case 'still':
-        fish.vx += rand(-10, 10) * factor;
+        fish.vx += rand(-10, 10) * factor * bigFlop;
         fish.behaviorTimer = rand(1.5, 3);
         break;
     }
+  }
+
+  // Shared free-flight physics for both autonomous floor-flopping and a
+  // player-thrown fish: gravity, friction, and bouncing off the outer
+  // arena walls. Does NOT touch the dock rects — callers decide whether
+  // those are walls (loose) or scoring sensors (thrown).
+  function applyFreePhysics(fish, dt) {
+    fish.vy += GRAVITY_LOOSE * dt;
+    const fr = Math.pow(FRICTION, dt * 60);
+    fish.vx *= fr; fish.vy *= fr;
+    fish.x += fish.vx * dt;
+    fish.y += fish.vy * dt;
+
+    const r = fish.def.size * 0.6;
+    const minX = ARENA_LEFT + r, maxX = ARENA_RIGHT - r;
+    const minY = ARENA_TOP + r, maxY = ARENA_BOTTOM - r;
+    if (fish.x < minX) { fish.x = minX; fish.vx = -fish.vx * BOUNCE; }
+    if (fish.x > maxX) { fish.x = maxX; fish.vx = -fish.vx * BOUNCE; }
+    if (fish.y < minY) { fish.y = minY; fish.vy = -fish.vy * BOUNCE; }
+    if (fish.y > maxY) { fish.y = maxY; fish.vy = -fish.vy * BOUNCE; }
+
+    if (fish.vx > 8) fish.facing = 1;
+    else if (fish.vx < -8) fish.facing = -1;
+
+    return r;
   }
 
   function updateFish(fish, dt) {
@@ -513,7 +610,7 @@
 
     if (fish.state === 'falling') {
       fish.vy += GRAVITY_FALL * dt;
-      fish.x += fish.vx * dt;
+      fish.x = clamp(fish.x + fish.vx * dt, ARENA_LEFT + 20, ARENA_RIGHT - 20);
       fish.y += fish.vy * dt;
       if (fish.y >= fish.targetY) {
         fish.y = fish.targetY;
@@ -522,6 +619,7 @@
         fish.lifeStarted = true;
         squash(fish);
         spawnDust(fish.x, fish.y + fish.def.size * 0.3);
+        sanitizeAgainstDocks(fish);
       }
       return;
     }
@@ -532,33 +630,25 @@
       return;
     }
 
-    if (fish.state === 'loose') {
-      fish.vy += GRAVITY_LOOSE * dt;
-      const fr = Math.pow(FRICTION, dt * 60);
-      fish.vx *= fr; fish.vy *= fr;
-      fish.x += fish.vx * dt;
-      fish.y += fish.vy * dt;
-
-      const r = fish.def.size * 0.6;
-      const minX = r, maxX = W - r, minY = ZONES.floor.y0 + r;
-      if (fish.x < minX) { fish.x = minX; fish.vx = -fish.vx * BOUNCE; }
-      if (fish.x > maxX) { fish.x = maxX; fish.vx = -fish.vx * BOUNCE; }
-      if (fish.y < minY) { fish.y = minY; fish.vy = -fish.vy * BOUNCE; }
-
-      const floorBottom = ZONES.floor.y1;
-      if (fish.y > floorBottom - r && !isOverTankX(fish.x)) {
-        fish.y = floorBottom - r;
-        fish.vy = -Math.abs(fish.vy) * BOUNCE;
+    if (fish.state === 'thrown') {
+      applyFreePhysics(fish, dt);
+      checkTankHit(fish);
+      if (fish.state !== 'thrown') { tickLife(fish, dt); return; }
+      const speed = Math.hypot(fish.vx, fish.vy);
+      if (speed < SETTLE_SPEED) {
+        fish.state = 'loose';
+        sanitizeAgainstDocks(fish);
       }
-      const hardBottom = H - 20;
-      if (fish.y > hardBottom) { fish.y = hardBottom; fish.vy = -fish.vy * BOUNCE; }
+      tickLife(fish, dt);
+      return;
+    }
 
-      if (fish.vx > 8) fish.facing = 1;
-      else if (fish.vx < -8) fish.facing = -1;
-
+    if (fish.state === 'loose') {
+      const r = applyFreePhysics(fish, dt);
+      keepOutsideRect(fish, freshwaterRect, r);
+      keepOutsideRect(fish, saltwaterRect, r);
       const speed = Math.hypot(fish.vx, fish.vy);
       updateFlopBehavior(fish, dt, speed);
-      checkTankHit(fish);
       tickLife(fish, dt);
       return;
     }
@@ -586,6 +676,26 @@
     }
   }
 
+  // Light pairwise separation so concurrent fish don't stack on top of
+  // each other while flopping. Only applies to settled, autonomous fish.
+  function resolveFishCollisions() {
+    const loose = fishes.filter(function (f) { return f.state === 'loose'; });
+    for (let i = 0; i < loose.length; i++) {
+      for (let j = i + 1; j < loose.length; j++) {
+        const a = loose[i], b = loose[j];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy) || 0.001;
+        const minDist = (a.def.size + b.def.size) * 0.55;
+        if (dist < minDist) {
+          const overlap = (minDist - dist) / 2;
+          const nx = dx / dist, ny = dy / dist;
+          a.x -= nx * overlap; a.y -= ny * overlap;
+          b.x += nx * overlap; b.y += ny * overlap;
+        }
+      }
+    }
+  }
+
   function spawnBubble(rect, color) {
     particles.push({
       type: 'bubble', x: rect.x + rand(10, rect.w - 10), y: rect.y + rect.h - 4,
@@ -605,6 +715,10 @@
         life: 0.6, age: 0, color,
       });
     }
+  }
+
+  function spawnScoreText(x, y, pts) {
+    particles.push({ type: 'scoretext', x, y, vy: -42, text: '+' + pts, life: 0.7, age: 0 });
   }
 
   function spawnFailMark(x, y) {
@@ -641,6 +755,8 @@
         p.x += p.vx * dt; p.y += p.vy * dt;
       } else if (p.type === 'ring') {
         p.r += p.growth * dt;
+      } else if (p.type === 'scoretext') {
+        p.y += p.vy * dt;
       }
     }
     particles = particles.filter(function (p) { return p.age < p.life; });
@@ -650,7 +766,9 @@
     animTime += dt;
     updateCat(dt);
     if (state === 'playing') {
+      runTime += dt;
       for (const f of fishes) updateFish(f, dt);
+      resolveFishCollisions();
       fishes = fishes.filter(function (f) { return !f.removeMe; });
     }
     updateParticles(dt);
@@ -866,43 +984,44 @@
     drawHeldFish();
   }
 
-  function drawFloorArea() {
+  function drawArena() {
     ctx.fillStyle = '#121a24';
-    ctx.fillRect(0, 0, W, ZONES.floor.y0);
+    ctx.fillRect(0, 0, W, ARENA_TOP);
     ctx.fillStyle = '#1b2735';
-    ctx.fillRect(0, ZONES.floor.y0, W, ZONES.floor.y1 - ZONES.floor.y0);
+    ctx.fillRect(0, ARENA_TOP, W, ARENA_BOTTOM - ARENA_TOP);
     ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1;
     for (let gx = 0; gx <= W; gx += 30) {
-      ctx.beginPath(); ctx.moveTo(gx, ZONES.floor.y0); ctx.lineTo(gx, ZONES.floor.y1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(gx, ARENA_TOP); ctx.lineTo(gx, ARENA_BOTTOM); ctx.stroke();
     }
-    for (let gy = ZONES.floor.y0; gy <= ZONES.floor.y1; gy += 30) {
+    for (let gy = ARENA_TOP; gy <= ARENA_BOTTOM; gy += 30) {
       ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
     }
   }
 
-  function drawTank(rect, accent, base, label) {
+  function drawDock(rect, accent, base, label) {
     ctx.save();
     ctx.fillStyle = base;
-    roundRect(rect.x, rect.y, rect.w, rect.h, 10);
+    roundRect(rect.x, rect.y, rect.w, rect.h, 16);
     ctx.fill();
-    ctx.strokeStyle = accent; ctx.lineWidth = 2.5;
-    roundRect(rect.x, rect.y, rect.w, rect.h, 10);
+    ctx.strokeStyle = accent; ctx.lineWidth = 3;
+    roundRect(rect.x, rect.y, rect.w, rect.h, 16);
     ctx.stroke();
-    ctx.strokeStyle = accent; ctx.lineWidth = 4; ctx.globalAlpha = 0.6;
-    ctx.beginPath(); ctx.moveTo(rect.x + 6, rect.y); ctx.lineTo(rect.x + rect.w - 6, rect.y); ctx.stroke();
+    ctx.strokeStyle = accent; ctx.lineWidth = 5; ctx.globalAlpha = 0.55;
+    ctx.beginPath(); ctx.moveTo(rect.x + 8, rect.y); ctx.lineTo(rect.x + rect.w - 8, rect.y); ctx.stroke();
     ctx.globalAlpha = 1;
     ctx.fillStyle = accent;
     ctx.font = '700 15px -apple-system, sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-    ctx.fillText(label, rect.x + rect.w / 2, rect.y + rect.h - 10);
+    ctx.save();
+    ctx.translate(rect.x + rect.w / 2, rect.y + rect.h / 2);
+    ctx.fillText(label, 0, 5);
+    ctx.restore();
     ctx.restore();
   }
 
-  function drawTanks() {
-    ctx.fillStyle = '#0d151c';
-    ctx.fillRect(0, ZONES.tanks.y0 - 8, W, H - (ZONES.tanks.y0 - 8));
-    drawTank(freshwaterRect, '#1fd8c0', '#0f5c52', 'ZOET');
-    drawTank(saltwaterRect, '#2b6bff', '#0a2a66', 'ZOUT');
+  function drawDocks() {
+    drawDock(freshwaterRect, '#1fd8c0', '#0f5c52', 'ZOET');
+    drawDock(saltwaterRect, '#2b6bff', '#0a2a66', 'ZOUT');
   }
 
   function drawHeart(cx, cy, filled) {
@@ -925,9 +1044,9 @@
     ctx.font = '700 20px -apple-system, sans-serif';
     ctx.fillStyle = '#e8edf5';
     ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText('SCORE: ' + String(score).padStart(4, '0'), 16, ZONES.topBar.y1 / 2);
+    ctx.fillText('SCORE: ' + String(score).padStart(4, '0'), 16, TOPBAR_H / 2);
 
-    const heartsY = ZONES.topBar.y1 / 2;
+    const heartsY = TOPBAR_H / 2;
     for (let i = 0; i < 3; i++) {
       drawHeart(W - 16 - i * 26, heartsY, i < lives);
     }
@@ -955,6 +1074,11 @@
         ctx.moveTo(p.x - 10, p.y - 10); ctx.lineTo(p.x + 10, p.y + 10);
         ctx.moveTo(p.x + 10, p.y - 10); ctx.lineTo(p.x - 10, p.y + 10);
         ctx.stroke();
+      } else if (p.type === 'scoretext') {
+        ctx.fillStyle = '#ffe27a';
+        ctx.font = '700 16px -apple-system, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(p.text, p.x, p.y);
       }
     }
     ctx.globalAlpha = 1;
@@ -969,7 +1093,7 @@
     ctx.fillText('FISHY FISHY', W / 2, H * 0.42);
     ctx.font = '500 15px -apple-system, sans-serif';
     ctx.fillStyle = '#c8d3e0';
-    ctx.fillText('Sleep en flick de vissen naar de juiste bak', W / 2, H * 0.48);
+    ctx.fillText('Grijp een vis en flick hem naar links of rechts', W / 2, H * 0.48);
   }
 
   function drawGameOverOverlay() {
@@ -998,8 +1122,8 @@
 
   function render() {
     ctx.clearRect(0, 0, W, H);
-    drawFloorArea();
-    drawTanks();
+    drawArena();
+    drawDocks();
 
     const drawOrder = fishes.slice().sort(function (a, b) {
       return (a === draggingFish ? 1 : 0) - (b === draggingFish ? 1 : 0);
