@@ -1,0 +1,22 @@
+# Geen mappenoverzicht en geen toegang tot configuratie, tests of verborgen bestanden.
+Options -Indexes
+<FilesMatch "^(config\.local\.php|config\.example\.php|_lib\.php|package\.json|README\.md)$">
+  Require all denied
+</FilesMatch>
+RedirectMatch 404 /\.(git|github)
+RedirectMatch 404 ^/.*/tests/
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "no-referrer"
+  Header always set X-Frame-Options "DENY"
+  Header always set Permissions-Policy "microphone=(self), camera=(), geolocation=()"
+  Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+</IfModule>
+
+# Geen cache voor de pagina zelf; leerstof en voortgang worden nergens opgeslagen.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
